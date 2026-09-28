@@ -178,19 +178,19 @@
         <div class="card">
             <h3>BME688</h3>
             <div class="value" id="sensor1">--</div>
-            <p>Gas Sensor</p>
+        
         </div>
 
         <div class="card">
             <h3>SGP40</h3>
             <div class="value" id="sensor2">--</div>
-            <p>VOC Sensor</p>
+        
         </div>
 
         <div class="card">
             <h3>SHT40</h3>
             <div class="value" id="sensor3">--</div>
-            <p>Air Quality Sensor</p>
+        
         </div>
 
         <div class="card">
