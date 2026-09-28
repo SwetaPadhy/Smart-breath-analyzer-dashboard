@@ -1,0 +1,547 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Breath Analyzer Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f7fb;
+        color: #222;
+    }
+
+    header {
+        background: #0b3d62;
+        color: white;
+        padding: 20px;
+        text-align: center;
+        font-size: 26px;
+        font-weight: bold;
+    }
+
+    .status {
+        text-align: center;
+        padding: 10px;
+        background: #e8f5e9;
+        color: green;
+        font-weight: bold;
+    }
+
+    .container {
+        width: 90%;
+        margin: 20px auto;
+    }
+
+    h2 {
+        color: #0b3d62;
+        margin-top: 30px;
+    }
+
+    .sensor-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+    }
+
+    .card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .card h3 {
+        margin: 5px 0;
+        color: #0b3d62;
+    }
+
+    .value {
+        font-size: 28px;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    .chart-card {
+        background: white;
+        padding: 20px;
+        margin-top: 25px;
+        border-radius: 12px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .ai-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .ai-card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .big-value {
+        font-size: 25px;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    .positive,
+    .high {
+        color: red;
+    }
+
+    .inconclusive,
+    .moderate {
+        color: orange;
+    }
+
+    .negative,
+    .low {
+        color: green;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        margin-top: 15px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+        padding: 12px;
+        border: 1px solid #ddd;
+        text-align: center;
+    }
+
+    th {
+        background: #0b3d62;
+        color: white;
+    }
+
+    button {
+        display: block;
+        margin: 25px auto;
+        padding: 14px 25px;
+        border: none;
+        border-radius: 8px;
+        background: #0b3d62;
+        color: white;
+        font-size: 17px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #075080;
+    }
+
+    @media(max-width: 700px) {
+        table {
+            font-size: 12px;
+        }
+
+        th, td {
+            padding: 7px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<header>
+    🌬️ SMART BREATH ANALYZER DASHBOARD
+</header>
+
+<div class="status">
+    🟢 Device Online
+</div>
+
+<div class="container">
+
+    <!-- SENSOR READINGS -->
+    <h2>📊 Live Sensor Readings</h2>
+
+    <div class="sensor-grid">
+
+        <div class="card">
+            <h3>BME688</h3>
+            <div class="value" id="sensor1">--</div>
+            <p>Gas Sensor</p>
+        </div>
+
+        <div class="card">
+            <h3>SGP40</h3>
+            <div class="value" id="sensor2">--</div>
+            <p>VOC Sensor</p>
+        </div>
+
+        <div class="card">
+            <h3>SHT40</h3>
+            <div class="value" id="sensor3">--</div>
+            <p>Air Quality Sensor</p>
+        </div>
+
+        <div class="card">
+            <h3>🌡️ Temperature</h3>
+            <div class="value" id="temperature">-- °C</div>
+        </div>
+
+        <div class="card">
+            <h3>💧 Humidity</h3>
+            <div class="value" id="humidity">-- %</div>
+        </div>
+
+        <div class="card">
+            <h3>🌬️ Breath Flow</h3>
+            <div class="value" id="flow">--</div>
+        </div>
+
+    </div>
+
+    <!-- CHART -->
+    <div class="chart-card">
+        <h2>📈 Live Sensor Response</h2>
+        <canvas id="sensorChart"></canvas>
+    </div>
+
+    <!-- AI ANALYSIS -->
+    <h2>🤖 AI Analysis</h2>
+
+    <div class="ai-grid">
+
+        <div class="ai-card">
+            <h3>Anomaly Score</h3>
+            <div class="big-value" id="anomaly">--</div>
+        </div>
+
+        <div class="ai-card">
+            <h3>AI Confidence</h3>
+            <div class="big-value" id="confidence">--</div>
+        </div>
+
+        <div class="ai-card">
+            <h3>Screening Result</h3>
+            <div class="big-value" id="result">--</div>
+        </div>
+
+    </div>
+
+    <!-- PREVIOUS READINGS -->
+    <h2>📋 Previous Readings</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>BME688</th>
+                <th>SGP40</th>
+                <th>SHT40</th>
+                <th>Temperature</th>
+                <th>Humidity</th>
+                <th>Confidence</th>
+                <th>Level</th>
+                <th>Result</th>
+            </tr>
+        </thead>
+
+        <tbody id="historyTable">
+        </tbody>
+    </table>
+
+    <!-- BUTTON -->
+    <button onclick="generateData()">
+        🔄 Generate Sensor Reading
+    </button>
+
+</div>
+
+<script>
+
+let history = [];
+
+/* ---------------- CHART ---------------- */
+
+const ctx = document.getElementById("sensorChart").getContext("2d");
+
+const sensorChart = new Chart(ctx, {
+    type: "line",
+
+    data: {
+        labels: [],
+
+        datasets: [
+            {
+                label: "BME688",
+                data: [],
+                borderWidth: 2,
+                tension: 0.3
+            },
+            {
+                label: "SGP40",
+                data: [],
+                borderWidth: 2,
+                tension: 0.3
+            },
+            {
+                label: "SHT40",
+                data: [],
+                borderWidth: 2,
+                tension: 0.3
+            }
+        ]
+    },
+
+    options: {
+        responsive: true,
+
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+
+/* ---------------- GENERATE DATA ---------------- */
+
+function generateData() {
+
+    // Demo sensor values
+    let s1 = Math.floor(Math.random() * 700);
+    let s2 = Math.floor(Math.random() * 700);
+    let s3 = Math.floor(Math.random() * 700);
+
+    let temp = (25 + Math.random() * 8).toFixed(1);
+    let humidity = Math.floor(40 + Math.random() * 40);
+    let flow = Math.floor(200 + Math.random() * 500);
+
+    /* -------- ANOMALY -------- */
+
+    let average = (s1 + s2 + s3) / 3;
+
+    let anomaly = Math.min(
+        99,
+        Math.floor((average / 700) * 100)
+    );
+
+    /* -------- CONFIDENCE / LEVEL / RESULT -------- */
+
+    let level;
+    let result;
+
+    /*
+        LEVEL AND RESULT ARE ALWAYS CONNECTED
+
+        HIGH CONFIDENCE     → POSITIVE
+        MODERATE CONFIDENCE → INCONCLUSIVE
+        LOW CONFIDENCE      → NEGATIVE
+    */
+
+    if (anomaly >= 65) {
+
+        level = "HIGH CONFIDENCE";
+        result = "POSITIVE";
+
+    } else if (anomaly >= 35) {
+
+        level = "MODERATE CONFIDENCE";
+        result = "INCONCLUSIVE";
+
+    } else {
+
+        level = "LOW CONFIDENCE";
+        result = "NEGATIVE";
+    }
+
+
+    /* -------- UPDATE SENSOR VALUES -------- */
+
+    document.getElementById("sensor1").innerText = s1;
+
+    document.getElementById("sensor2").innerText = s2;
+
+    document.getElementById("sensor3").innerText = s3;
+
+    document.getElementById("temperature").innerText =
+        temp + " °C";
+
+    document.getElementById("humidity").innerText =
+        humidity + " %";
+
+    document.getElementById("flow").innerText =
+        flow;
+
+
+    /* -------- UPDATE AI ANALYSIS -------- */
+
+    document.getElementById("anomaly").innerText =
+        anomaly + "%";
+
+    document.getElementById("confidence").innerText =
+        level;
+
+    document.getElementById("result").innerText =
+        result;
+
+
+    /* -------- CONFIDENCE COLOR -------- */
+
+    let confidenceElement =
+        document.getElementById("confidence");
+
+    confidenceElement.classList.remove(
+        "high",
+        "moderate",
+        "low"
+    );
+
+    if (level === "HIGH CONFIDENCE") {
+
+        confidenceElement.classList.add("high");
+
+    } else if (level === "MODERATE CONFIDENCE") {
+
+        confidenceElement.classList.add("moderate");
+
+    } else {
+
+        confidenceElement.classList.add("low");
+    }
+
+
+    /* -------- RESULT COLOR -------- */
+
+    let resultElement =
+        document.getElementById("result");
+
+    resultElement.classList.remove(
+        "positive",
+        "inconclusive",
+        "negative"
+    );
+
+    if (result === "POSITIVE") {
+
+        resultElement.classList.add("positive");
+
+    } else if (result === "INCONCLUSIVE") {
+
+        resultElement.classList.add("inconclusive");
+
+    } else {
+
+        resultElement.classList.add("negative");
+    }
+
+
+    /* -------- SAVE HISTORY -------- */
+
+    let time = new Date().toLocaleTimeString();
+
+    history.unshift({
+        time: time,
+        s1: s1,
+        s2: s2,
+        s3: s3,
+        temp: temp,
+        humidity: humidity,
+        level: level,
+        result: result
+    });
+
+
+    // Keep only latest 10 readings
+
+    if (history.length > 10) {
+        history.pop();
+    }
+
+
+    /* -------- UPDATE TABLE -------- */
+
+    updateTable();
+
+
+    /* -------- UPDATE CHART -------- */
+
+    updateChart();
+}
+
+
+/* ---------------- TABLE ---------------- */
+
+function updateTable() {
+
+    let table =
+        document.getElementById("historyTable");
+
+    table.innerHTML = "";
+
+    history.forEach(row => {
+
+        let tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${row.time}</td>
+            <td>${row.s1}</td>
+            <td>${row.s2}</td>
+            <td>${row.s3}</td>
+            <td>${row.temp} °C</td>
+            <td>${row.humidity} %</td>
+            <td>${row.level}</td>
+            <td>${row.level}</td>
+            <td>${row.result}</td>
+        `;
+
+        table.appendChild(tr);
+    });
+}
+
+
+/* ---------------- CHART UPDATE ---------------- */
+
+function updateChart() {
+
+    let recent =
+        [...history].reverse();
+
+    sensorChart.data.labels =
+        recent.map(row => row.time);
+
+    sensorChart.data.datasets[0].data =
+        recent.map(row => row.s1);
+
+    sensorChart.data.datasets[1].data =
+        recent.map(row => row.s2);
+
+    sensorChart.data.datasets[2].data =
+        recent.map(row => row.s3);
+
+    sensorChart.update();
+}
+
+
+/*
+    Readings are generated ONLY
+    when the user clicks the button.
+*/
+
+</script>
+
+</body>
+</html>
+```
